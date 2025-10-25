@@ -12,7 +12,7 @@ class Circle(Shape):
     def area(self):
         return 3.14 * self.radius * self.radius
 
-class Square(shape):
+class Square(Shape):
     def __init__(self,length):
         self.length = length
 
