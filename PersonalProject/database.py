@@ -43,7 +43,6 @@ def init_db():
 
 
 def register_user(username, password):
-    """Saves a new customer to the database."""
     try:
         with sqlite3.connect('store.db') as conn:
             conn.execute(
@@ -80,18 +79,15 @@ def get_items():
 
 
 def update_item_price(item_id, new_price):
-    """Update the price of an item."""
     with sqlite3.connect('store.db') as conn:
         conn.execute("UPDATE items SET price = ? WHERE id = ?", (new_price, item_id))
 
 
 def delete_item(item_id):
-    """Delete an item from inventory."""
     with sqlite3.connect('store.db') as conn:
         conn.execute("DELETE FROM items WHERE id = ?", (item_id,))
 
 
 def add_new_item(name, price):
-    """Admin function to insert a brand new product into the database."""
     with sqlite3.connect('store.db') as conn:
         conn.execute("INSERT INTO items (name, price) VALUES (?, ?)", (name, price))
