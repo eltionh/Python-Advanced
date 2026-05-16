@@ -91,3 +91,9 @@ def delete_item(item_id):
 def add_new_item(name, price):
     with sqlite3.connect('store.db') as conn:
         conn.execute("INSERT INTO items (name, price) VALUES (?, ?)", (name, price))
+
+def get_chart_data():
+    """Fetches product names and prices to create a visualization graph."""
+    with sqlite3.connect('store.db') as conn:
+        # Returns a list of like [('Audi logo', 20.0), ('PC Gaming', 1250.0)]
+        return conn.execute("SELECT name, price FROM items").fetchall()

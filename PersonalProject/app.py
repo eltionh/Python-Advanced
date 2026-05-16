@@ -5,10 +5,17 @@ from models import Product, ShoppingCart
 
 
 def main():
+    # --- NATIVE STREAMLIT THEME CONFIGURATION ---
+    # This modifies the platform configuration natively using Python parameters
+    st.config.set_option("theme.primaryColor", "#3B82F6")     # Bright accent brand color
+    st.config.set_option("theme.backgroundColor", "#294D61")   # Core background canvas color
+    st.config.set_option("theme.secondaryBackgroundColor", "#102A43") # Sidebar and card container background
+    st.config.set_option("theme.textColor", "#E2E8F0")         # Primary reading text color
+
     st.set_page_config(page_title="DS Online Store", layout="wide")
     database.init_db()
 
-    # --- Session State Fixes ---
+    # --- Session State Management ---
     if 'role' not in st.session_state:
         st.session_state.role = None
     if 'username' not in st.session_state:
@@ -16,10 +23,10 @@ def main():
     if 'cart_data' not in st.session_state:
         st.session_state.cart_data = []
 
-        # --- Header App Bar ---
+        # --- Header Navigation Bar ---
     nav1, nav2 = st.columns([3, 1])
     with nav1:
-        st.title("🛒 DS Online Python Store")
+        st.title("🛒 Elite Modular Python Store")
     with nav2:
         if st.session_state.role is not None:
             st.write(f"Logged in as: **{st.session_state.username}**")
@@ -66,7 +73,6 @@ def main():
     # --- USER MODE (SHOPPING) ---
     if st.session_state.role == 'user':
         st.sidebar.header("📦 Your Shopping Basket")
-
         active_cart = ShoppingCart()
 
         if not st.session_state.cart_data:
@@ -86,7 +92,7 @@ def main():
 
             if st.sidebar.button("Purchase Items", type="primary", use_container_width=True):
                 st.balloons()
-                st.success("🎉 Thank you for purchasing!")
+                st.sidebar.success("🎉 Thank you for purchasing!")
                 st.session_state.cart_data = []
                 st.button("Continue Shopping")
 
@@ -103,20 +109,27 @@ def main():
                         st.session_state.cart_data.append({'id': item[0], 'name': item[1], 'price': item[2]})
                         st.toast(f"Added {item[1]}!")
 
-    # --- ADMIN MODE (CRUD + ADD PRODUCT) ---
+    # --- ADMIN MODE (CRUD + USER TABLE + GRAPH) ---
     elif st.session_state.role == 'admin':
         admin_menu = st.sidebar.radio("Navigation", ["Manage Inventory", "View Registered Users"])
 
         if admin_menu == "View Registered Users":
             st.header("👥 System Users Directory")
             user_list = database.get_all_users()
+
+            table_data = []
             for u in user_list:
-                st.text(f"ID: {u[0]} | Username: {u[1]} | Privilege Role: {u[2].upper()}")
+                table_data.append({
+                    "User ID": u[0],
+                    "Username": u[1],
+                    "Privilege Role": u[2].upper()
+                })
+            st.table(table_data)
 
         elif admin_menu == "Manage Inventory":
             st.header("🛠 Store Inventory Override Panel")
 
-            # --- NEW FEATURE: ADD PRODUCT FORM ---
+            # Add Product Form
             with st.container(border=True):
                 st.subheader("➕ Add New Product to Store")
                 add_name = st.text_input("Product Name", placeholder="e.g., Wireless Mouse")
@@ -130,9 +143,20 @@ def main():
                         st.error("Please provide a valid name and price greater than 0.")
 
             st.divider()
+
+            # Live Inventory Analytics Graph
+            st.subheader("📊 Inventory Price Analytics")
+            raw_chart_data = database.get_chart_data()
+            chart_dict = {
+                "Product": [item[0] for item in raw_chart_data],
+                "Price ($)": [item[1] for item in raw_chart_data]
+            }
+            st.bar_chart(data=chart_dict, x="Product", y="Price ($)")
+
+            st.divider()
             st.subheader("Current Stock Items")
 
-            # Existing Edit/Delete controls
+            # Update and Delete controls
             items = database.get_items()
             for item in items:
                 with st.expander(f"Modify Item ID {item[0]}: {item[1]}"):
